@@ -266,7 +266,7 @@ public final class PaperweightPlatformAdapter extends NMSAdapter {
             if (nmsChunk != null) {
                 return nmsChunk;
             }
-            if (Fawe.isMainThread()) {
+            if (Fawe.isTickThread()) {
                 return serverLevel.getChunk(chunkX, chunkZ);
             }
         } else {
@@ -281,7 +281,7 @@ public final class PaperweightPlatformAdapter extends NMSAdapter {
                 return nmsChunk;
             }
             // Avoid "async" methods from the main thread.
-            if (Fawe.isMainThread()) {
+            if (Fawe.isTickThread()) {
                 return serverLevel.getChunk(chunkX, chunkZ);
             }
             CompletableFuture<org.bukkit.Chunk> future = serverLevel.getWorld().getChunkAtAsync(chunkX, chunkZ, true, true);
