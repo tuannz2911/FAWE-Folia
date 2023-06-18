@@ -116,9 +116,20 @@ public final class PaperweightPlatformAdapter extends NMSAdapter {
     private static Field LEVEL_CHUNK_ENTITIES;
     private static Field SERVER_LEVEL_ENTITY_MANAGER;
 
+    private static boolean FOLIA_SUPPORT;
+
     static {
         final MethodHandles.Lookup lookup = MethodHandles.lookup();
         try {
+            boolean isFolia = false;
+            try {
+                // Assume API is present
+                Class.forName("io.papermc.paper.threadedregions.scheduler.EntityScheduler");
+                isFolia = true;
+            } catch (Exception unused) {
+
+            }
+            FOLIA_SUPPORT = isFolia;
             fieldData = PalettedContainer.class.getDeclaredField(Refraction.pickName("data", "d"));
             fieldData.setAccessible(true);
 
@@ -273,12 +284,16 @@ public final class PaperweightPlatformAdapter extends NMSAdapter {
         } else {
             LevelChunk nmsChunk = serverLevel.getChunkSource().getChunkAtIfCachedImmediately(chunkX, chunkZ);
             if (nmsChunk != null) {
-                addTicket(serverLevel, chunkX, chunkZ);
+                if(!FOLIA_SUPPORT) {// TODO: Dirty folia workaround - Needs be discussed with FAWE members
+                    addTicket(serverLevel, chunkX, chunkZ);
+                }
                 return nmsChunk;
             }
             nmsChunk = serverLevel.getChunkSource().getChunkAtIfLoadedImmediately(chunkX, chunkZ);
             if (nmsChunk != null) {
-                addTicket(serverLevel, chunkX, chunkZ);
+                if(!FOLIA_SUPPORT) {// TODO: Dirty folia workaround - Needs be discussed with FAWE members
+                    addTicket(serverLevel, chunkX, chunkZ);
+                }
                 return nmsChunk;
             }
             // Avoid "async" methods from the main thread.
@@ -288,7 +303,9 @@ public final class PaperweightPlatformAdapter extends NMSAdapter {
             CompletableFuture<org.bukkit.Chunk> future = serverLevel.getWorld().getChunkAtAsync(chunkX, chunkZ, true, true);
             try {
                 CraftChunk chunk = (CraftChunk) future.get();
-                addTicket(serverLevel, chunkX, chunkZ);
+                if(!FOLIA_SUPPORT) {// TODO: Dirty folia workaround - Needs be discussed with FAWE members
+                    addTicket(serverLevel, chunkX, chunkZ);
+                }
                 return (LevelChunk) chunk.getHandle(ChunkStatus.FULL);
             } catch (Throwable e) {
                 e.printStackTrace();
